@@ -44,8 +44,7 @@ class LoanXGBoostModelInference:
         return features
     
     def predict(self, new_data):
-        # Pisahkan target 'loan_status' dan fitur
-        target = new_data['loan_status']
+        target = none
         processed_data = self.preprocess_new_data(new_data)
         prediction = self.model.predict(processed_data)
         return prediction, target
