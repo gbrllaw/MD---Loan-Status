@@ -11,6 +11,8 @@ class LoanXGBoostModelInference:
 
     def preprocess_new_data(self, new_data):
         features = new_data.copy()
+
+        # Pastikan kolom 'loan_status' tidak ada di data input
         if 'loan_status' in features.columns:
             features = features.drop('loan_status', axis=1)
 
@@ -18,7 +20,7 @@ class LoanXGBoostModelInference:
         features['person_gender'] = features['person_gender'].str.lower()
         features['person_gender'] = features['person_gender'].replace('fe male', 'female')
 
-        # Imputasi nilai kosong
+        # Imputasi missing value
         features['person_income'] = self.imputer.transform(features[['person_income']])
 
         # Scaling numerik
