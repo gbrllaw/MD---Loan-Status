@@ -13,10 +13,12 @@ class LoanXGBoostModelInference:
         self.columns = joblib.load(columns_path)
         
     def preprocess_new_data(self, new_data):
-        # Pastikan kolom yang ada sesuai dengan kolom yang diharapkan oleh model
-        features = new_data.copy()  # Jangan hapus kolom 'loan_status' jika tidak diperlukan
+        # Pastikan kolom 'loan_status' tidak ada di data yang dikirimkan
+        features = new_data.copy()
+        if 'loan_status' in features.columns:
+            features = features.drop('loan_status', axis=1)  # Drop 'loan_status' untuk input fitur
 
-        # Preprocessing
+        # preprocessing
         features['person_gender'] = features['person_gender'].str.lower()
         features['person_gender'] = features['person_gender'].replace('fe male', 'female')
 
@@ -44,10 +46,9 @@ class LoanXGBoostModelInference:
         return features
     
     def predict(self, new_data):
-        # Pastikan 'loan_status' tidak ada di data yang dikirimkan
+        # Pastikan kolom 'loan_status' tidak ada di data input
         processed_data = self.preprocess_new_data(new_data)
         
         # Prediksi
         prediction = self.model.predict(processed_data)
-        print("Predictions:", predictions))
         return prediction
