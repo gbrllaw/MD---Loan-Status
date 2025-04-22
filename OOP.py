@@ -1,24 +1,12 @@
 import os
-print("Directory of this script:", os.path.dirname(os.path.abspath(__file__)))
-
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import classification_report
 import numpy as np
-np.seterr(all='ignore')
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import RobustScaler, LabelEncoder
 from sklearn.metrics import classification_report
 import xgboost as xgb
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning)
 import joblib
-import pickle
-
 
 class LoanXGBoostModel:
     def __init__(self, data_path):
@@ -30,6 +18,8 @@ class LoanXGBoostModel:
         self.y_test = None
         self.model = None
         self.scaler = None
+        self.imputer = None
+        self.encoders = {}
         self.columns = None
 
     def load_and_clean_data(self):
@@ -43,26 +33,18 @@ class LoanXGBoostModel:
         self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
             input_df, output_df, test_size=0.2, random_state=42
         )
-        # Cek tipe data kolom 'person_income' di x_train
-        print(self.x_train['person_income'].dtype)  # Untuk memeriksa tipe data
-
 
     def preprocess_data(self):
         # Imputasi nilai kosong
-        imputer = SimpleImputer(strategy='median')
-        self.x_train['person_income'] = imputer.fit_transform(self.x_train[['person_income']])
-        self.x_test['person_income'] = imputer.transform(self.x_test[['person_income']])
-        # Verifikasi setelah imputasi
-        print(self.x_train.isnull().sum())  # Cek apakah ada missing value di x_train
-        print(self.x_test.isnull().sum())   # Cek apakah ada missing value di x_test
-
+        self.imputer = SimpleImputer(strategy='median')
+        self.x_train['person_income'] = self.imputer.fit_transform(self.x_train[['person_income']])
+        self.x_test['person_income'] = self.imputer.transform(self.x_test[['person_income']])
 
         # Scaling numerik
         numeric_cols = self.x_train.select_dtypes(include=['int64', 'float64']).columns
-        scaler = RobustScaler()
-        self.x_train[numeric_cols] = scaler.fit_transform(self.x_train[numeric_cols])
-        self.x_test[numeric_cols] = scaler.transform(self.x_test[numeric_cols])
-        self.scaler = scaler  # simpan scaler
+        self.scaler = RobustScaler()
+        self.x_train.loc[:, numeric_cols] = self.scaler.fit_transform(self.x_train[numeric_cols])
+        self.x_test.loc[:, numeric_cols] = self.scaler.transform(self.x_test[numeric_cols])
 
         # Encoding binary kategorikal
         label_cols = ['person_gender', 'previous_loan_defaults_on_file']
@@ -70,6 +52,7 @@ class LoanXGBoostModel:
             encoder = LabelEncoder()
             self.x_train[col] = encoder.fit_transform(self.x_train[col])
             self.x_test[col] = encoder.transform(self.x_test[col])
+            self.encoders[col] = encoder  # Simpan encoder untuk inferensi
 
         # One-hot encoding untuk kolom multikategori
         one_hot_cols = ['person_education', 'loan_intent', 'person_home_ownership']
@@ -78,8 +61,7 @@ class LoanXGBoostModel:
 
         # Samakan struktur kolom
         self.x_train, self.x_test = self.x_train.align(self.x_test, join='left', axis=1, fill_value=0)
-
-        self.columns = self.x_train.columns.tolist()  # simpan struktur kolom
+        self.columns = self.x_train.columns.tolist()  # Simpan struktur kolom
 
     def train_best_model(self):
         # Hitung class weight
@@ -127,15 +109,11 @@ class LoanXGBoostModel:
         print("\nClassification Report\n")
         print(classification_report(self.y_test, y_pred, target_names=['0', '1']))
 
-    def save_model(self, model_path='xgb_model.pkl', scaler_path='scaler.pkl', columns_path='columns.pkl'):
+    def save_model(self, model_path='xgb_model.pkl', scaler_path='scaler.pkl', imputer_path='imputer.pkl',
+                   columns_path='columns.pkl', encoders_path='encoders.pkl'):
         joblib.dump(self.model, model_path)
         joblib.dump(self.scaler, scaler_path)
+        joblib.dump(self.imputer, imputer_path)
         joblib.dump(self.columns, columns_path)
-        print("Model, scaler, and column structure saved successfully.")
-
-model = LoanXGBoostModel(data_path='Dataset_A_loan.csv')
-model.load_and_clean_data()
-model.preprocess_data()
-model.train_best_model()
-model.evaluate_model()
-model.save_model()
+        joblib.dump(self.encoders, encoders_path)  # Simpan encoders
+        print("Model, scaler, imputer, encoders, dan struktur kolom berhasil disimpan.")
