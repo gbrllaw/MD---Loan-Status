@@ -13,10 +13,10 @@ class LoanXGBoostModelInference:
         self.columns = joblib.load(columns_path)
         
     def preprocess_new_data(self, new_data):
-        # Pastikan kolom 'loan_status' ada di data baru dan tetap diprediksi
+        # Pastikan kolom yang ada sesuai dengan kolom yang diharapkan oleh model
         features = new_data.copy()  # Jangan hapus kolom 'loan_status' jika tidak diperlukan
 
-        # preprocessing
+        # Preprocessing
         features['person_gender'] = features['person_gender'].str.lower()
         features['person_gender'] = features['person_gender'].replace('fe male', 'female')
 
@@ -44,33 +44,10 @@ class LoanXGBoostModelInference:
         return features
     
     def predict(self, new_data):
-        # Pisahkan target 'loan_status' dan fitur (jika ada target di data)
-        if 'loan_status' in new_data.columns:
-            target = new_data['loan_status']
-            new_data = new_data.drop('loan_status', axis=1)  # Drop 'loan_status' untuk input fitur
-        else:
-            target = None
-
+        # Pastikan 'loan_status' tidak ada di data yang dikirimkan
         processed_data = self.preprocess_new_data(new_data)
-
-        # Debugging: Cek kolom processed_data
-        print("Processed data columns:", processed_data.columns)
-
+        
+        # Prediksi
         prediction = self.model.predict(processed_data)
-        return prediction, target
-
-# Membaca dataset yang akan diprediksi
-new_data = pd.read_csv('Dataset_A_loan.csv')  # Ganti dengan path yang sesuai
-
-# Memuat model dan informasi yang diperlukan
-model_inference = LoanXGBoostModelInference(
-    model_path='xgb_model.pkl',
-    scaler_path='scaler.pkl',
-    columns_path='columns.pkl'
-)
-
-# Melakukan prediksi
-predictions = model_inference.predict(new_data)
-
-# Menampilkan hasil prediksi
-print("Predictions:", predictions))
+        print("Predictions:", predictions))
+        return prediction
