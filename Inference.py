@@ -44,19 +44,18 @@ class LoanXGBoostModelInference:
         return features
     
     def predict(self, new_data):
-        target = none
         processed_data = self.preprocess_new_data(new_data)
         prediction = self.model.predict(processed_data)
         return prediction, target
 
 
-new_data = pd.read_csv('Dataset_A_loan.csv')  # Data yang akan diprediksi
+new_data = pd.read_csv('Dataset_A_loan.csv')  
 model_inference = LoanXGBoostModelInference(
     model_path='xgb_model.pkl',
     scaler_path='scaler.pkl',
     columns_path='columns.pkl'
 )
 
-predictions, actual_values = model_inference.predict(new_data)
+predictions = model_inference.predict(new_data)
 print("Predictions:", predictions)
 
