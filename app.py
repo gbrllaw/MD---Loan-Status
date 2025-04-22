@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
-from LoanXGBoostModelInference import LoanXGBoostModelInference
+from Inference import LoanXGBoostModelInference
 
 # Muat model inference
 model_inference = LoanXGBoostModelInference(
