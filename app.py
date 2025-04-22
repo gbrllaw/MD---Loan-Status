@@ -5,7 +5,7 @@ inference = LoanInference(
     model_path='xgb_model.pkl',
     scaler_path='scaler.pkl',
     columns_path='columns.pkl'
-)
+) 
 
 # Streamlit UI untuk input pengguna
 st.title("Loan Application Prediction")
