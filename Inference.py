@@ -2,7 +2,7 @@
 import joblib
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import RobustScaler, LabelEncoder
-import pandas as pd
+import pandas as pd 
 
 class LoanInference:
     def __init__(self, model_path, scaler_path, columns_path):
